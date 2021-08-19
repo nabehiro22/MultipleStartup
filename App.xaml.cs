@@ -23,8 +23,7 @@ namespace MultipleStartup
 		private static extern bool IsIconic(IntPtr hWnd);
 		// ShowWindowAsync関数のパラメータに渡す定義値(画面を元の大きさに戻す)
 		private const int SW_RESTORE = 9;
-
-		Semaphore semaphore = null;
+		public Semaphore semaphore = null;
 
 		protected override Window CreateShell()
 		{
@@ -38,10 +37,10 @@ namespace MultipleStartup
 			// 既にアプリが起動していればそのアプリを前面に出す
 			else
 			{
-				foreach (var p in Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName))
+				foreach (Process p in Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName))
 				{
 					// 自分自身のプロセスIDは無視する
-					if (p.Id != Process.GetCurrentProcess().Id)
+					if (p.Id != Environment.ProcessId)
 					{
 						// プロセスのフルパス名を比較して同じアプリケーションか検証
 						if (p.MainModule.FileName == Process.GetCurrentProcess().MainModule.FileName)
@@ -49,10 +48,10 @@ namespace MultipleStartup
 							// メイン・ウィンドウが最小化されていれば元に戻す
 							if (IsIconic(p.MainWindowHandle))
 							{
-								ShowWindowAsync(p.MainWindowHandle, SW_RESTORE);
+								_ = ShowWindowAsync(p.MainWindowHandle, SW_RESTORE);
 							}
 							// メイン・ウィンドウを最前面に表示する
-							SetForegroundWindow(p.MainWindowHandle);
+							_ = SetForegroundWindow(p.MainWindowHandle);
 						}
 					}
 				}
@@ -68,10 +67,7 @@ namespace MultipleStartup
 
 		private void Application_Exit(object sender, ExitEventArgs e)
 		{
-			if (semaphore != null)
-			{
-				semaphore.Dispose();
-			}
+			semaphore?.Dispose();
 		}
 	}
 }
